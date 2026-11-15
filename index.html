@@ -51,8 +51,6 @@ summary{cursor:pointer;font-weight:600}
   <h2><span class="n">2</span>Agrega a tus invitados</h2>
   <label for="nm">Nombre</label>
   <input id="nm" placeholder="Ejemplo: Familia Pérez">
-  <label for="ph">Teléfono de WhatsApp</label>
-  <input id="ph" inputmode="tel" placeholder="Ejemplo: 0991234567">
   <button class="big" id="add">Agregar a la lista</button>
 </section>
 
@@ -69,13 +67,11 @@ summary{cursor:pointer;font-weight:600}
   <textarea id="msg" rows="4"></textarea>
   <p class="t">Puedes usar {nombre} y {enlace}. Así se verá:</p>
   <div class="prev" id="prev"></div>
-  <div class="two">
-    <div><label for="cc">Código de país</label><input id="cc" inputmode="numeric" placeholder="593"></div>
-    <div><label for="pn">Palabra del nombre en el enlace</label><input id="pn" placeholder="nombre"></div>
-  </div>
-  <p class="t">Cambia las palabras solo si tu invitación usa otras.</p>
-  <label for="bulk">Pegar muchos invitados (uno por línea: Nombre, teléfono)</label>
-  <textarea id="bulk" rows="3" placeholder="Ana López, 0991234567&#10;Carlos Ruiz, 0987654321"></textarea>
+  <label for="pn">Palabra del nombre en el enlace</label>
+  <input id="pn" placeholder="nombre">
+  <p class="t">Cambia la palabra solo si tu invitación usa otra.</p>
+  <label for="bulk">Pegar muchos invitados (un nombre por línea)</label>
+  <textarea id="bulk" rows="3" placeholder="Ana López&#10;Carlos Ruiz"></textarea>
   <div class="bar"><button id="imp">Agregar todos</button></div>
   <div class="bar"><button id="csv">Descargar copia de la lista</button><button id="clr">Borrar toda la lista</button></div>
   <p class="t">La lista se guarda solo en este navegador. No se sube a GitHub.</p>
@@ -86,17 +82,13 @@ summary{cursor:pointer;font-weight:600}
 const K='invitaciones-xv-v1',$=s=>document.querySelector(s);
 const OLD='¡Hola {nombre}! ✨ Con mucha alegría te invitamos a los XV años de Daira. Aquí está tu invitación: {enlace}\n¡Esperamos contar contigo!';
 const DEF='Estimado *{nombre}* 💕\nHay momentos en la vida que son inolvidables, y compartirlos con las personas que más quiero los hace aún más especiales.\n💃✨ Abre el siguiente enlace para ver tu invitación completa con todos los detalles de la fiesta:\n{enlace}';
-const D={cc:'593',link:'',msg:DEF,pn:'nombre'};
+const D={link:'',msg:DEF,pn:'nombre'};
 let S={cfg:{...D},guests:[]};
 try{const r=JSON.parse(localStorage.getItem(K)||'null');if(r)S=r}catch(e){}
 S.cfg=Object.assign({},D,S.cfg);if(S.cfg.msg===OLD)S.cfg.msg=DEF;S.guests=S.guests||[];
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const num=p=>{let d=p.replace(/\D/g,''),cc=S.cfg.cc.replace(/\D/g,'');
-  if(d.startsWith('00'))return d.slice(2);
-  if(d.startsWith('0'))return cc+d.slice(1);
-  return d.length<=10?cc+d:d};
 const url=g=>{let b=S.cfg.link.trim();if(!b)return '(aquí irá el enlace)';
   const i=b.indexOf('#'),h=i<0?'':b.slice(i);if(i>=0)b=b.slice(0,i);
   return b+(b.includes('?')?'&':'?')+encodeURIComponent(S.cfg.pn)+'='+encodeURIComponent(g.name)+h};
@@ -107,9 +99,9 @@ function render(){
   $('#count').textContent=g.length?'Enviadas: '+s+' de '+g.length:'';
   $('#prev').textContent=msg({name:'Ana López'});
   $('#aviso').textContent=!FOTO?'Falta subir foto.jpg: por ahora se envía solo el texto.':IOS?'En iPhone, WhatsApp no junta la foto con el mensaje, así que se envía solo el texto.':!canFoto()?'Desde este dispositivo se envía solo el texto. Para enviar con foto, abre el panel en tu celular Android.':!MOVIL?'Estás en una computadora: la foto y el mensaje llegarán como dos mensajes separados. Para que lleguen juntos, abre el panel en tu celular Android.':'Se abrirá WhatsApp con la foto y el mensaje juntos. Elige a esa persona y toca enviar.';
-  $('#list').innerHTML=g.length?g.map(x=>`<div class="g"><div class="row"><div><div class="nm">${esc(x.name)}${x.sent?'<span class="ok">✓ Enviado</span>':''}</div><div class="t">${esc(x.phone)}</div></div><button class="link" data-a="del" data-i="${x.id}" aria-label="Quitar a ${esc(x.name)}">Quitar</button></div><button class="wa" data-a="send" data-i="${x.id}">${x.sent?'Enviar otra vez':'Enviar invitación'}</button></div>`).join(''):'<p class="sub">Todavía no hay invitados. Agrégalos en el paso 2.</p>';
+  $('#list').innerHTML=g.length?g.map(x=>`<div class="g"><div class="row"><div><div class="nm">${esc(x.name)}${x.sent?'<span class="ok">✓ Enviado</span>':''}</div></div><button class="link" data-a="del" data-i="${x.id}" aria-label="Quitar a ${esc(x.name)}">Quitar</button></div><button class="wa" data-a="send" data-i="${x.id}">${x.sent?'Enviar otra vez':'Enviar invitación'}</button></div>`).join(''):'<p class="sub">Todavía no hay invitados. Agrégalos en el paso 2.</p>';
 }
-function add(n,p){n=n.trim();p=p.trim();if(!n||!p)return 0;S.guests.push({id:uid(),name:n,phone:p,sent:false});return 1}
+function add(n){n=n.trim();if(!n)return 0;S.guests.push({id:uid(),name:n,sent:false});return 1}
 let FOTO=null;
 fetch('foto.jpg').then(r=>r.ok?r.blob():Promise.reject()).then(b=>{FOTO=new File([b],'invitacion.jpg',{type:'image/jpeg'});render()}).catch(()=>{});
 const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent),MOVIL=/Android/i.test(navigator.userAgent);
@@ -118,19 +110,19 @@ function send(g){
   if(!S.cfg.link.trim()){alert('Primero pega el enlace de la invitación (paso 1).');$('#link').focus();return}
   const text=msg(g),done=()=>{g.sent=true;save();render()};
   if(canFoto()){navigator.share({files:[FOTO],text}).then(done).catch(e=>{if(e&&e.name!=='AbortError')alert('No se pudo abrir WhatsApp. Intenta otra vez.')});return}
-  window.open('https://wa.me/'+num(g.phone)+'?text='+encodeURIComponent(text),'_blank');done();
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');done();
 }
 
-$('#link').value=S.cfg.link;$('#msg').value=S.cfg.msg;$('#cc').value=S.cfg.cc;$('#pn').value=S.cfg.pn;
-['link','msg','cc','pn'].forEach(k=>$('#'+k).oninput=e=>{S.cfg[k]=e.target.value;save();render()});
+$('#link').value=S.cfg.link;$('#msg').value=S.cfg.msg;$('#pn').value=S.cfg.pn;
+['link','msg','pn'].forEach(k=>$('#'+k).oninput=e=>{S.cfg[k]=e.target.value;save();render()});
 $('#add').onclick=()=>{
-  if(add($('#nm').value,$('#ph').value)){$('#nm').value=$('#ph').value='';save();render();$('#nm').focus()}
-  else alert('Escribe el nombre y el teléfono.');
+  if(add($('#nm').value)){$('#nm').value='';save();render();$('#nm').focus()}
+  else alert('Escribe el nombre.');
 };
-['nm','ph'].forEach(i=>$('#'+i).onkeydown=e=>{if(e.key==='Enter')$('#add').click()});
+$('#nm').onkeydown=e=>{if(e.key==='Enter')$('#add').click()};
 $('#imp').onclick=()=>{
-  let c=0;$('#bulk').value.split('\n').forEach(l=>{const p=l.split(/[,;\t]/);if(p.length>1)c+=add(p[0],p[1])});
-  if(c){$('#bulk').value='';save();render()}else alert('Escribe una línea por invitado, así: Nombre, teléfono');
+  let c=0;$('#bulk').value.split('\n').forEach(l=>{c+=add(l.split(/[,;\t]/)[0])});
+  if(c){$('#bulk').value='';save();render()}else alert('Escribe un nombre por línea.');
 };
 $('#list').onclick=e=>{
   const b=e.target.closest('button');if(!b)return;
@@ -139,7 +131,7 @@ $('#list').onclick=e=>{
   else if(b.dataset.a==='del'&&confirm('¿Quitar a '+g.name+' de la lista?')){S.guests=S.guests.filter(x=>x!==g);save();render()}
 };
 $('#csv').onclick=()=>{
-  const t='Nombre,Teléfono,Estado\n'+S.guests.map(g=>[g.name,g.phone,g.sent?'Enviado':'Pendiente'].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const t='Nombre,Estado\n'+S.guests.map(g=>[g.name,g.sent?'Enviado':'Pendiente'].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='invitados.csv';a.click();
 };
 $('#clr').onclick=()=>{if(confirm('¿Borrar toda la lista de invitados?')){S.guests=[];save();render()}};
