@@ -81,18 +81,19 @@ summary{cursor:pointer;font-weight:600}
 <script>
 const K='invitaciones-xv-v1',$=s=>document.querySelector(s);
 const OLD='¡Hola {nombre}! ✨ Con mucha alegría te invitamos a los XV años de Daira. Aquí está tu invitación: {enlace}\n¡Esperamos contar contigo!';
-const DEF='Estimado *{nombre}* 💕\nHay momentos en la vida que son inolvidables, y compartirlos con las personas que más quiero los hace aún más especiales.\n💃✨ Abre el siguiente enlace para ver tu invitación completa con todos los detalles de la fiesta:\n{enlace}';
+const OLD2='Estimado *{nombre}* 💕\nHay momentos en la vida que son inolvidables, y compartirlos con las personas que más quiero los hace aún más especiales.\n💃✨ Abre el siguiente enlace para ver tu invitación completa con todos los detalles de la fiesta:\n{enlace}';
+const DEF='Estimado(a) *{nombre}* 💕\nHay momentos en la vida que son inolvidables, y compartirlos con las personas que más quiero los hace aún más especiales.\n💃✨ Abre el siguiente enlace para ver tu invitación completa con todos los detalles de la fiesta:\n{enlace}';
 const D={link:'',msg:DEF,pn:'nombre'};
 let S={cfg:{...D},guests:[]};
 try{const r=JSON.parse(localStorage.getItem(K)||'null');if(r)S=r}catch(e){}
-S.cfg=Object.assign({},D,S.cfg);if(S.cfg.msg===OLD)S.cfg.msg=DEF;S.guests=S.guests||[];
+S.cfg=Object.assign({},D,S.cfg);if(S.cfg.msg===OLD||S.cfg.msg===OLD2)S.cfg.msg=DEF;S.guests=S.guests||[];
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const url=g=>{let b=S.cfg.link.trim();if(!b)return '(aquí irá el enlace)';
   const i=b.indexOf('#'),h=i<0?'':b.slice(i);if(i>=0)b=b.slice(0,i);
   return b+(b.includes('?')?'&':'?')+encodeURIComponent(S.cfg.pn)+'='+encodeURIComponent(g.name)+h};
-const msg=g=>S.cfg.msg.split('{nombre}').join(g.name).split('{enlace}').join(url(g));
+const msg=g=>S.cfg.msg.split('{saludo}').join('Estimado(a)').split('{nombre}').join(g.name).split('{enlace}').join(url(g));
 
 function render(){
   const g=S.guests,s=g.filter(x=>x.sent).length;
